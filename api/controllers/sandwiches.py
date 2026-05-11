@@ -1,43 +1,37 @@
+from sqlalchemy.orm import Session
+from fastapi import status, Response
+from ..models import models, schemas
 
-def create(db: Session, order):
-    # Create a new instance of the Order model with the provided data
-    db_order = models.Order(
-        customer_name=order.customer_name,
-        description=order.description
+def create(db: Session, sandwich):
+    db_sandwich = models.Sandwich(
+        sandwich_name=sandwich.sandwich_name,
+        price=sandwich.price
     )
-    # Add the newly created Order object to the database session
-    db.add(db_order)
-    # Commit the changes to the database
+
+    db.add(db_sandwich)
     db.commit()
-    # Refresh the Order object to ensure it reflects the current state in the database
-    db.refresh(db_order)
-    # Return the newly created Order object
-    return db_order
+    db.refresh(db_sandwich)
+    return db_sandwich
 
 
 def read_all(db: Session):
-    return db.query(models.Order).all()
+    return db.query(models.Sandwich).all()
 
 
-def read_one(db: Session, order_id):
-    return db.query(models.Order).filter(models.Order.id == order_id).first()
+def read_one(db: Session, sandwich_id):
+    return db.query(models.Sandwich).filter(models.Sandwich.id == sandwich_id).first()
 
 
-def update(db: Session, order_id, order):
-    # Query the database for the specific order to update
-    db_order = db.query(models.Order).filter(models.Order.id == order_id)
-    # Extract the update data from the provided 'order' object
-    update_data = order.model_dump(exclude_unset=True)
-    # Update the database record with the new data, without synchronizing the session
-    db_order.update(update_data, synchronize_session=False)
-    # Commit the changes to the database
+def update(db: Session, sandwich_id: int, sandwich: schemas.SandwichUpdate):
+    db_query = db.query(models.Sandwich).filter(models.Sandwich.id == sandwich_id)
+    update_data = sandwich.model_dump(exclude_unset=True)
+    db_query.update(update_data, synchronize_session=False)
     db.commit()
-    # Return the updated order record
-    return db_order.first()
+    return db_query.first()
 
 
-def delete(db: Session, order_id):
-    db_order = db.query(models.Order).filter(models.Order.id == order_id)
-    db_order.delete(synchronize_session=False)
+def delete(db: Session, sandwich_id):
+    db_query = db.query(models.Sandwich).filter(models.Sandwich.id == sandwich_id)
+    db_query.delete(synchronize_session=False)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
